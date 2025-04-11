@@ -3,14 +3,6 @@ import os
 import fitz  # PyMuPDF
 import argparse
 
-# Try to import Streamlit secrets if running on Streamlit Cloud
-try:
-    import streamlit as st
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
-except (ImportError, KeyError):
-    # Fallback for local CLI testing
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -50,7 +42,9 @@ def review_resume(pdf_path):
     return feedback
 
 
+# CLI entry point – doesn't run during import
 if __name__ == "__main__":
+    openai.api_key = os.getenv("OPENAI_API_KEY")  # local-only
     parser = argparse.ArgumentParser(description="AI Resume Reviewer")
     parser.add_argument("--file", required=True, help="Path to resume PDF")
     args = parser.parse_args()
