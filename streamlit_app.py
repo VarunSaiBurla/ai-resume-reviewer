@@ -1,15 +1,18 @@
 import streamlit as st
 
-st.set_page_config(page_title="AI Resume Reviewer", page_icon="🧠")
+st.set_page_config(page_title="Debugger", page_icon="🐞")
+st.title("🐞 Streamlit App Debugger")
 
-st.title("🧠 AI Resume Reviewer")
-st.markdown("Hello! If you're seeing this, the app is rendering correctly. 🎉")
+try:
+    st.success("✅ Streamlit started successfully!")
 
-# Check API key input
-api_key = st.text_input("🔑 Enter your OpenAI API key", type="password")
+    import os
+    st.write("Working directory:", os.getcwd())
 
-if not api_key:
-    st.warning("Please enter your API key to continue.")
-    st.stop()
+    st.write("Trying to render input field...")
+    val = st.text_input("Just a test input")
+    if val:
+        st.success(f"You typed: {val}")
 
-st.success("API key received.")
+except Exception as e:
+    st.error(f"❌ An error occurred: {e}")
