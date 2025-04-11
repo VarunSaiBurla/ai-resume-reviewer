@@ -36,4 +36,4 @@ Automatically checks Python linting using `flake8`.
 - PyMuPDF
 
 ---
-MIT License | Made with 💼 by [Your Name]
+MIT License | Made with 💼 by [Varun Sai Burla]
