@@ -3,12 +3,22 @@ import os
 import fitz  # PyMuPDF
 import argparse
 
+# Try to import Streamlit secrets if running on Streamlit Cloud
+try:
+    import streamlit as st
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
+except (ImportError, KeyError):
+    # Fallback for local CLI testing
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
     text = ""
     for page in doc:
         text += page.get_text()
     return text
+
 
 def generate_resume_feedback(resume_text):
     prompt = f"""
@@ -33,10 +43,12 @@ def generate_resume_feedback(resume_text):
     )
     return response.choices[0].message.content
 
+
 def review_resume(pdf_path):
     resume_text = extract_text_from_pdf(pdf_path)
     feedback = generate_resume_feedback(resume_text)
     return feedback
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI Resume Reviewer")
