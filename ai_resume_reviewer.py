@@ -1,5 +1,16 @@
 import openai
+import os
 import fitz  # PyMuPDF
+import argparse
+
+# Handle secret injection
+try:
+    import streamlit as st
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
+except (ImportError, KeyError):
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+client = openai.OpenAI(api_key=openai.api_key)  # ✅ Create OpenAI client
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -21,8 +32,8 @@ def generate_resume_feedback(resume_text):
     ---
     {resume_text}
     """
-    
-    response = openai.ChatCompletion.create(
+
+    response = client.chat.completions.create(  # ✅ new API call
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an expert resume reviewer."},
@@ -35,3 +46,12 @@ def review_resume(pdf_path):
     resume_text = extract_text_from_pdf(pdf_path)
     feedback = generate_resume_feedback(resume_text)
     return feedback
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="AI Resume Reviewer")
+    parser.add_argument("--file", required=True, help="Path to resume PDF")
+    args = parser.parse_args()
+
+    result = review_resume(args.file)
+    print("\n===== AI Feedback =====\n")
+    print(result)
