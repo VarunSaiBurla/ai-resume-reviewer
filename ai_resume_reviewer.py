@@ -1,16 +1,5 @@
-import os
 import fitz  # PyMuPDF
-import argparse
-from openai import OpenAI  # ✅ Updated import for v1.x SDK
-
-# Handle API key based on environment
-try:
-    import streamlit as st
-    api_key = st.secrets["OPENAI_API_KEY"]
-except (ImportError, KeyError):
-    api_key = os.getenv("OPENAI_API_KEY")
-
-client = OpenAI(api_key=api_key)  # ✅ Correct instantiation
+from openai import OpenAI
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -19,7 +8,9 @@ def extract_text_from_pdf(pdf_path):
         text += page.get_text()
     return text
 
-def generate_resume_feedback(resume_text):
+def generate_resume_feedback(resume_text, api_key):
+    client = OpenAI(api_key=api_key)  # ✅ use user's key
+
     prompt = f"""
     You are a professional resume reviewer. Analyze the following resume text and provide structured feedback:
 
@@ -33,7 +24,7 @@ def generate_resume_feedback(resume_text):
     {resume_text}
     """
 
-    response = client.chat.completions.create(  # ✅ Updated for new SDK
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an expert resume reviewer."},
@@ -42,16 +33,7 @@ def generate_resume_feedback(resume_text):
     )
     return response.choices[0].message.content
 
-def review_resume(pdf_path):
+def review_resume(pdf_path, api_key):
     resume_text = extract_text_from_pdf(pdf_path)
-    feedback = generate_resume_feedback(resume_text)
+    feedback = generate_resume_feedback(resume_text, api_key)
     return feedback
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI Resume Reviewer")
-    parser.add_argument("--file", required=True, help="Path to resume PDF")
-    args = parser.parse_args()
-
-    result = review_resume(args.file)
-    print("\n===== AI Feedback =====\n")
-    print(result)
