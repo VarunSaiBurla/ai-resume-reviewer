@@ -1,16 +1,16 @@
-import openai
 import os
 import fitz  # PyMuPDF
 import argparse
+from openai import OpenAI  # ✅ Updated import for v1.x SDK
 
-# Handle secret injection
+# Handle API key based on environment
 try:
     import streamlit as st
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
+    api_key = st.secrets["OPENAI_API_KEY"]
 except (ImportError, KeyError):
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
 
-client = openai.OpenAI(api_key=openai.api_key)  # ✅ Create OpenAI client
+client = OpenAI(api_key=api_key)  # ✅ Correct instantiation
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -33,7 +33,7 @@ def generate_resume_feedback(resume_text):
     {resume_text}
     """
 
-    response = client.chat.completions.create(  # ✅ new API call
+    response = client.chat.completions.create(  # ✅ Updated for new SDK
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an expert resume reviewer."},
