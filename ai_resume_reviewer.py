@@ -1,5 +1,5 @@
+import openai
 import fitz  # PyMuPDF
-from openai import OpenAI
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -8,9 +8,9 @@ def extract_text_from_pdf(pdf_path):
         text += page.get_text()
     return text
 
-def generate_resume_feedback(resume_text, api_key):
-    client = OpenAI(api_key=api_key)  # ✅ use user's key
-
+def review_resume(pdf_path, api_key):
+    openai.api_key = api_key
+    resume_text = extract_text_from_pdf(pdf_path)
     prompt = f"""
     You are a professional resume reviewer. Analyze the following resume text and provide structured feedback:
 
@@ -24,7 +24,7 @@ def generate_resume_feedback(resume_text, api_key):
     {resume_text}
     """
 
-    response = client.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an expert resume reviewer."},
@@ -33,7 +33,14 @@ def generate_resume_feedback(resume_text, api_key):
     )
     return response.choices[0].message.content
 
-def review_resume(pdf_path, api_key):
+def score_resume(pdf_path):
     resume_text = extract_text_from_pdf(pdf_path)
-    feedback = generate_resume_feedback(resume_text, api_key)
-    return feedback
+    score = len(resume_text.split())  # Just a mock scoring logic
+    score = min(100, max(30, score // 10))
+    return score
+
+def extract_missing_sections(pdf_path):
+    resume_text = extract_text_from_pdf(pdf_path).lower()
+    sections = ["summary", "education", "experience", "skills", "projects", "certifications"]
+    missing = [section.title() for section in sections if section not in resume_text]
+    return missing
