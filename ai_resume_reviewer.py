@@ -1,5 +1,6 @@
+import fitz  # PyMuPDF
 from openai import OpenAI
-import fitz
+
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -8,22 +9,24 @@ def extract_text_from_pdf(pdf_path):
         text += page.get_text()
     return text
 
-def review_resume(pdf_path, api_key):
-    resume_text = extract_text_from_pdf(pdf_path)
-    prompt = f"""
-    You are a professional resume reviewer. Analyze the following resume text and provide structured feedback:
 
-    1. Formatting: Comments on layout, readability, and section structure.
-    2. Clarity: Whether the responsibilities and achievements are clear.
-    3. Grammar & Style: Spelling, grammar, sentence structure.
-    4. Impact: Suggestions to make it more results-oriented and impactful.
+def review_resume(pdf_path, api_key):
+    client = OpenAI(api_key=api_key)
+    resume_text = extract_text_from_pdf(pdf_path)
+
+    prompt = f"""
+    You are a professional resume reviewer. Analyze the following resume and give structured feedback:
+
+    1. Formatting: layout, readability, section clarity.
+    2. Clarity: Are achievements and responsibilities clearly stated?
+    3. Grammar & Style: spelling, grammar, sentence structure.
+    4. Impact: How results-oriented and impressive is it?
+    5. Suggestions: What could be improved?
 
     Resume:
     ---
     {resume_text}
     """
-
-    client = OpenAI(api_key=api_key)
 
     response = client.chat.completions.create(
         model="gpt-4",
@@ -33,19 +36,29 @@ def review_resume(pdf_path, api_key):
         ]
     )
 
-    return response.choices[0].message.content
+    return response.choices[0].message.content.strip()
+
 
 def score_resume(pdf_path):
-    text = extract_text_from_pdf(pdf_path)
-    if len(text) < 500:
-        return 40
-    elif len(text) < 1000:
-        return 65
-    else:
-        return 85
+    resume_text = extract_text_from_pdf(pdf_path)
+    score = 50
+
+    if "experience" in resume_text.lower():
+        score += 10
+    if "education" in resume_text.lower():
+        score += 10
+    if "skills" in resume_text.lower():
+        score += 10
+    if "projects" in resume_text.lower():
+        score += 10
+    if len(resume_text) > 500:
+        score += 10
+
+    return min(score, 100)
+
 
 def extract_missing_sections(pdf_path):
-    text = extract_text_from_pdf(pdf_path).lower()
-    sections = ["summary", "experience", "education", "skills", "projects"]
-    missing = [s.capitalize() for s in sections if s not in text]
+    resume_text = extract_text_from_pdf(pdf_path).lower()
+    expected_sections = ["experience", "education", "skills", "projects", "certifications", "summary"]
+    missing = [section.capitalize() for section in expected_sections if section not in resume_text]
     return missing
